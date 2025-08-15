@@ -16,50 +16,38 @@ require("dotenv").config();
 // Initialize Express application
 const app = express();
 
-if (!process.env.ULTRAVOX_AGENT_ID) {
-  throw new Error("ULTRAVOX_AGENT_ID is not set");
+if (!process.env.TENANT_BASE_URL) {
+  throw new Error("TENANT_BASE_URL is not set");
 }
 
-// Get the configurable Ultravox sample rate
-const ULTRAVOX_SAMPLE_RATE = 8000;
-const ULTRAVOX_API_URL = `https://api.ultravox.ai/api/agents/${process.env.ULTRAVOX_AGENT_ID}/calls`;
-const ULTRAVOX_CLIENT_BUFFER_SIZE_MS =
-  process.env.ULTRAVOX_CLIENT_BUFFER_SIZE_MS || 60;
+const TENANT_BASE_URL = process.env.TENANT_BASE_URL || "";
 
 /**
  * Connects to Ultravox API and returns an open WebSocket connection
  * @returns {Promise<WebSocket>} The WebSocket connection to Ultravox
  */
-async function connectToUltravox(uuid) {
+async function connectToUltravox(uuid, from, to) {
   console.log(
     "Connecting to Ultravox API",
-    ULTRAVOX_API_URL,
-    ULTRAVOX_SAMPLE_RATE,
-    ULTRAVOX_CLIENT_BUFFER_SIZE_MS
+    uuid,
+    from,
+    to
   );
   const response = await axios.post(
-    ULTRAVOX_API_URL,
+    TENANT_BASE_URL,
     {
-      metadata: {
-        uuid: uuid,
-      },  
-      medium: {
-        serverWebSocket: {
-          inputSampleRate: ULTRAVOX_SAMPLE_RATE,
-          outputSampleRate: ULTRAVOX_SAMPLE_RATE,
-          clientBufferSizeMs: ULTRAVOX_CLIENT_BUFFER_SIZE_MS,
-        },
-      },
+      from: from || "unknown",
+      to: to || "unknown",
+      callId: uuid,
     },
     {
       headers: {
         "Content-Type": "application/json",
-        "X-API-Key": process.env.ULTRAVOX_API_KEY,
       },
     }
   );
 
-  const joinUrl = response.data.joinUrl;
+  const joinUrl = response.data.data.joinUrl;
   if (!joinUrl) {
     throw new Error("Missing Ultravox joinUrl");
   }
