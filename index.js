@@ -65,8 +65,11 @@ async function connectToUltravox(uuid, from, to) {
 const handleAudioStream = async (req, res) => {
   const uuid = req.headers['x-uuid'];
   console.log('Received UUID:', uuid);
-  
-  const ultravoxWebSocket = await connectToUltravox(uuid);
+
+  const from = req.headers['x-from'];
+  const to = req.headers['x-to'];
+
+  const ultravoxWebSocket = await connectToUltravox(uuid, from, to);
 
   ultravoxWebSocket.on("open", () => {
     console.log("WebSocket connected to Ultravox");
